@@ -1,0 +1,15 @@
+<launch>
+  <node name="vtol_msn" pkg="vtol_msn" type="vtol_msn" output="screen">
+    <param name="uwb_file" type="string" value="$(find vtol_msn)/data_fly31/reference_uwb" />
+    <param name="tag_file" type="string" value="$(find vtol_msn)/data_fly31/reference_tags" />
+    <param name="gnss_cov" type="double" value="0.015" />
+    <param name="reg_cov" type="double"  value="0.15" />
+    <param name="tag_cov" type="double"  value="0.015" />
+    <param name="init_cov" type="double"  value="0.5" />
+    <param name="omega_noise" type="double"  value="0.1" />
+    <param name="acc_noise" type="double"  value="0.4" />
+    <param name="gyro_noise" type="double"  value="0.2" />
+  </node>
+
+  <!--node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="$(find vtol_msn)/config/vtol_msn.rviz"/-->
+</launch>
