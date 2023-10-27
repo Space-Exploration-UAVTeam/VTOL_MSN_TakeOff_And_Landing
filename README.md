@@ -2,7 +2,7 @@
 
 VTOL aircraft Multi-Sensor Navigation, in Take Off And Landing scenario.
 Based on the Error-State Kalman Filter, a fusion navigation framework that combines INS, GNSS, Vision, and UWB modules.
- <img src="(https://github.com/Space-Exploration-UAVTeam/VTOL_MSN_TakeOff_And_Landing/blob/master/imgs/%E5%9B%BE%E7%89%876.png) />  
+ <img src="(https://github.com/Space-Exploration-UAVTeam/VTOL_MSN_TakeOff_And_Landing/blob/master/imgs/%E5%9B%BE%E7%89%876.png)  width="1200" />  
 
 ## 1. Prerequisites
 ### 1.1 ROS1
