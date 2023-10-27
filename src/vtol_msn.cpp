@@ -55,7 +55,7 @@ StatesGroup:
 #include "sophus/so3.hpp"
 #include "sophus/se3.hpp"
 
-#define OUTPUT_FOR_PAPER
+// #define OUTPUT_FOR_PAPER
 // #define LOW_PASS_FILTER
 #define D2R (3.14159/180.0)        // degree to radius
 #define R2D (180.0/3.14159)        // radius to degree
@@ -67,7 +67,7 @@ int threshold_anchor_pos_ = 2;//参与计算 anchor_transition 的数据量阈�
 int threshold_anchor_yaw_ = 2;//参与计算 anchor_transition 的数据量阈值
 int threshold_gnss_star_ = 10;//gnss搜星数量阈值
 //噪声
-double R_init_COV = 0.0001;//初始P，P大有利于快速收敛？
+double R_init_COV = 0.0001;//初始P
 double P_init_COV = 0.0001;
 double V_init_COV = 0.0001;
 
@@ -441,9 +441,9 @@ void Imu_Process(const std::deque<sensor_msgs::Imu::ConstPtr>& buf_imu, StatesGr
     cov_gyr_diag = Eigen::Vector3d( COV_VEL_NOISE_DIAG, COV_VEL_NOISE_DIAG, COV_VEL_NOISE_DIAG ).asDiagonal();//(0.2，0.2，0.2)【固定值】【速度误差】
     cov_acc_diag = Eigen::Vector3d( COV_ACC_NOISE_DIAG, COV_ACC_NOISE_DIAG, COV_ACC_NOISE_DIAG ).asDiagonal();//(0.4,0.4,0.4)【固定值】【加速度误差】
     //依次是Q、P、V噪声
-    cov_w.block<3,3>(0,0) = Jr_omega_dt * cov_omega_diag * Jr_omega_dt * dt * dt;//(角速度误差*dt)^2=角度噪声，ESKF小册子里没有姿态修正，但是武大KF-GINS乘了姿态
-    cov_w.block<3,3>(3,3) = R_imu * cov_gyr_diag * R_imu.transpose() * dt * dt;  //(速度误差*姿态修正*dt)^2=位置噪声，ESKF小册子里没有这一项！！！武大KF-GINS也没有
-    cov_w.block<3,3>(6,6) = cov_acc_diag * dt * dt;                              //(加速度误差*dt)^2=速度噪声，ESKF小册子里没有姿态修正，但是武大KF-GINS乘了姿态
+    cov_w.block<3,3>(0,0) = Jr_omega_dt * cov_omega_diag * Jr_omega_dt * dt * dt;//(角速度误差*dt)^2=角度噪声，ESKF小册子里没有姿态修正，KF-GINS乘了姿态
+    cov_w.block<3,3>(3,3) = R_imu * cov_gyr_diag * R_imu.transpose() * dt * dt;  //(速度误差*姿态修正*dt)^2=位置噪声，ESKF小册子里没有这一项，KF-GINS也没有
+    cov_w.block<3,3>(6,6) = cov_acc_diag * dt * dt;                              //(加速度误差*dt)^2=速度噪声，ESKF小册子里没有姿态修正，KF-GINS乘了姿态
     state_inout.cov = F_x * state_inout.cov * F_x.transpose() + cov_w;//协方差递推，噪声累积；[9x9]*[9x9]*[9x9] + [9x9]
     /* error state propagation */
     d_state_inout = F_x * d_state_inout;
@@ -467,9 +467,9 @@ void Imu_Process(const std::deque<sensor_msgs::Imu::ConstPtr>& buf_imu, StatesGr
     cov_gyr_diag = Eigen::Vector3d( COV_VEL_NOISE_DIAG, COV_VEL_NOISE_DIAG, COV_VEL_NOISE_DIAG ).asDiagonal();//(0.2，0.2，0.2)【固定值】【速度误差】
     cov_acc_diag = Eigen::Vector3d( COV_ACC_NOISE_DIAG, COV_ACC_NOISE_DIAG, COV_ACC_NOISE_DIAG ).asDiagonal();//(0.4,0.4,0.4)【固定值】【加速度误差】
     //依次是Q、P、V噪声
-    cov_w.block< 3, 3 >( 0, 0 ) = Jr_omega_dt * cov_omega_diag * Jr_omega_dt * dt * dt;//(角速度误差*dt)^2=角度噪声，ESKF小册子里没有姿态修正，但是武大KF-GINS乘了姿态
-    cov_w.block< 3, 3 >( 3, 3 ) = R_imu * cov_gyr_diag * R_imu.transpose() * dt * dt;  //(速度误差*姿态修正*dt)^2=位置噪声，ESKF小册子里没有这一项！！！武大KF-GINS也没有
-    cov_w.block< 3, 3 >( 6, 6 ) = cov_acc_diag * dt * dt;                              //(加速度误差*dt)^2=速度噪声，ESKF小册子里没有姿态修正，但是武大KF-GINS乘了姿态
+    cov_w.block<3,3>(0,0) = Jr_omega_dt * cov_omega_diag * Jr_omega_dt * dt * dt;//(角速度误差*dt)^2=角度噪声，ESKF小册子里没有姿态修正，KF-GINS乘了姿态
+    cov_w.block<3,3>(3,3) = R_imu * cov_gyr_diag * R_imu.transpose() * dt * dt;  //(速度误差*姿态修正*dt)^2=位置噪声，ESKF小册子里没有这一项，KF-GINS也没有
+    cov_w.block<3,3>(6,6) = cov_acc_diag * dt * dt;                              //(加速度误差*dt)^2=速度噪声，ESKF小册子里没有姿态修正，KF-GINS乘了姿态
     state_inout.cov = F_x * state_inout.cov * F_x.transpose() + cov_w;//协方差递推，噪声累积；[9x9]*[9x9]*[9x9] + [9x9]
     /* error state propagation */
     d_state_inout = F_x * d_state_inout;
@@ -592,7 +592,7 @@ void initializel_uwb(const std::string uwb_file)//uwb_file没有后缀名
   infile.open(uwb_anchor.data());//将文件流对象和文件连接起来
   assert(infile.is_open());
   double d1,d2,d3;
-  infile >> d1;//【赞美斌哥】
+  infile >> d1;//
   infile >> d2;
   infile >> d3;
   anchor_uwb_blh_ << d1,d2,d3;
@@ -612,7 +612,7 @@ void initializel_uwb(const std::string uwb_file)//uwb_file没有后缀名
   R_ecef_enu_ << -sin_lon, -sin_lat*cos_lon, cos_lat*cos_lon,
                   cos_lon, -sin_lat*sin_lon, cos_lat*sin_lon,
                   0      ,  cos_lat        , sin_lat;
-  double sin_yaw_diff = std::sin(yaw_uwb_enu*D2R);//从local到enu：sin(yaw);从enu到local：sin(-yaw)!!!!!!!!!!!!!!!!!!!!!!!!!!
+  double sin_yaw_diff = std::sin(yaw_uwb_enu*D2R);//从local到enu：sin(yaw);从enu到local：sin(-yaw)!!!
   double cos_yaw_diff = std::cos(yaw_uwb_enu*D2R);
   Eigen::Matrix3d R_enu_local;
   R_enu_local << cos_yaw_diff, -sin_yaw_diff, 0,
@@ -1050,7 +1050,7 @@ void filtering_process()
                  0,0,COMPASS_OBSERVE_COV,0,0,0,
                  0,0,0,COMPASS_OBSERVE_COV,0,0,
                  0,0,0,0,COMPASS_OBSERVE_COV,0,
-                 0,0,0,0,0,COMPASS_OBSERVE_COV; //////////////////////////////////////////////////////////////////注意噪声位置！！！
+                 0,0,0,0,0,COMPASS_OBSERVE_COV; //
 
       /*** Error State Kalman Filter Update ***/
       // std::cout<<"========  state_.cov  ========"<<std::endl<< state_.cov <<std::endl;    
@@ -1424,20 +1424,20 @@ int main(int argc, char **argv)
   // service: uint16 SERVICE_GPS=1, uint16 SERVICE_GLONASS=2, uint16 SERVICE_COMPASS=4, uint16 SERVICE_GALILEO=8
   */
   //sensor_msgs/NavSatFix, 基于WGS84的经纬[deg]高[m]，GVINS用的是ECEF坐标WGS84标准
-  gnss_gt_sub = nh.subscribe("/ublox_driver/receiver_lla", 10, gnss_gt_callback);//sensor_msgs/NavSatFixg格式 【10hz】【差分ublox作为真值】
+  // gnss_gt_sub = nh.subscribe("/ublox_driver/receiver_lla", 10, gnss_gt_callback);//sensor_msgs/NavSatFixg格式 【10hz】【差分ublox作为真值】
 
   //当前三种数据全部来自于FDI，也可以用ExactTime，但是考虑到使用其他数据源的可能性选择了ApproximateTime
-  // message_filters::Subscriber<sensor_msgs::NavSatFix> gnss_sub(nh, "/raw_gnss", 10);//sensor_msgs/NavSatFixg格式【1hz】
-  // message_filters::Subscriber<fdilink_ahrs::satellite> gnss_sat_sub(nh, "/satellite", 10);//【1hz】
-  // typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::NavSatFix, fdilink_ahrs::satellite> MySyncPolicy;
-  // message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), gnss_sub, gnss_sat_sub);
-  // sync.registerCallback(boost::bind(&gnss_callback, _1, _2));
+  message_filters::Subscriber<sensor_msgs::NavSatFix> gnss_sub(nh, "/raw_gnss", 10);//sensor_msgs/NavSatFixg格式【1hz】
+  message_filters::Subscriber<fdilink_ahrs::satellite> gnss_sat_sub(nh, "/satellite", 10);//【1hz】
+  typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::NavSatFix, fdilink_ahrs::satellite> MySyncPolicy;
+  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), gnss_sub, gnss_sat_sub);
+  sync.registerCallback(boost::bind(&gnss_callback, _1, _2));
 
   imu_sub = nh.subscribe("/imu", 200, imu_callback, ros::TransportHints().tcpNoDelay());//【100hz】
   compass_sub = nh.subscribe("/mag_pose", 10, compass_callback);//【5hz】 
-  // tag_sub = nh.subscribe("/tag_detections", 10, tag_callback); //【5hz】
-  // uwb_sub = nh.subscribe("/nlink_linktrack_nodeframe2", 10, uwb_callback); //【5hz】      
-  uwb_sub = nh.subscribe("/nlink_linktrack_nodeframe2_0", 10, uwb_callback); //【5hz】      
+  tag_sub = nh.subscribe("/tag_detections", 10, tag_callback); //【5hz】
+  uwb_sub = nh.subscribe("/nlink_linktrack_nodeframe2", 10, uwb_callback); //【5hz】      
+  // uwb_sub = nh.subscribe("/nlink_linktrack_nodeframe2_0", 10, uwb_callback); //【5hz】      
 
 #ifdef OUTPUT_FOR_PAPER
   std::string filename_gnss_gt = "/home/zbh/gt_data.dat"; 
